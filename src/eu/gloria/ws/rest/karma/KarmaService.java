@@ -6,19 +6,26 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.core.spi.factory.ResponseBuilderImpl;
 
+import eu.gloria.ws.rest.karma.dao.KarmaDAO;
 import eu.gloria.ws.rest.karma.dao.PolicyDAO;
 import eu.gloria.ws.rest.karma.dto.Policy;
+import eu.gloria.ws.rest.karma.factory.KarmaFactory;
 import eu.gloria.ws.rest.karma.factory.PolicyFactory;
 
 @Path("/karma")
@@ -27,7 +34,41 @@ public class KarmaService {
 	@Path("/execute/ping")
 	@Produces(MediaType.TEXT_PLAIN)
 	public String echo(){
-		return "Hola Mundo";
+		return "HI!";
+	}
+	
+	@GET
+	@Path("/execute/get_karma/{user}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getKarma(@PathParam("user") String user){
+		
+		JSONObject karma = new JSONObject();
+		int karmaValue;
+		
+		System.out.println("Parameter:"+user);
+		
+		KarmaDAO karmaDAO = KarmaFactory.create();
+		
+		
+		try {
+			karmaValue = karmaDAO.get(user);
+			karma.append("user", user);
+			karma.append("karma", karmaValue);
+			System.out.println("Value of karma:"+karmaValue);
+			if (karmaValue != -1){
+				return Response.status(200).type(MediaType.APPLICATION_JSON).entity(karma).build();
+				
+			} else {
+				return Response.status(404).build();
+			}
+			
+		} catch (SQLException e) {
+			return Response.status(500).build();
+		} catch (JSONException e) {
+			return Response.status(500).build();
+		}
+		
+		
 	}
 	
 	@GET
